@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>GapFinder — Toney's Money AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;--dark:#101010;--dark2:#161616;--dark3:#1e1e1e;
+  --green:#00FF87;--green2:#00cc6a;--green-pale:#001a0d;
+  --orange:#FF6B00;--orange2:#ff8c33;--orange-pale:#1a0d00;
+  --purple:#9B59FF;--purple-pale:#0d0020;
+  --white:#F0F0F0;--gray:#666;--gray2:#333;--border:#222;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--white);display:flex;flex-direction:column}
+
+/* TOP BAR */
+.topbar{background:var(--dark);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px}
+.topbar-logo span{color:var(--green)}
+.topbar-sub{font-size:10px;color:var(--gray);letter-spacing:1px;text-transform:uppercase}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.budget-badge{padding:4px 10px;background:var(--green-pale);border:1px solid rgba(0,255,135,0.25);border-radius:20px;font-size:11px;color:var(--green);font-weight:700;cursor:pointer}
+
+/* NAV TABS */
+.nav{display:flex;background:var(--dark);border-bottom:2px solid var(--border);flex-shrink:0}
+.nav-tab{flex:1;padding:12px 6px;border:none;background:transparent;color:var(--gray);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:'Inter',sans-serif;border-bottom:2px solid transparent;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:3px}
+.nav-tab .tab-icon{font-size:18px}
+.nav-tab.active{color:var(--white);border-bottom-color:var(--green)}
+.nav-tab:hover:not(.active){color:var(--white)}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.page{display:none;padding:16px;min-height:100%}
+.page.active{display:block}
+
+/* CARDS */
+.card{background:var(--dark2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.card-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-icon{font-size:20px}
+.card-title{font-weight:800;font-size:14px}
+.card-sub{font-size:11px;color:var(--gray);margin-top:1px}
+.card-body{padding:16px}
+
+/* INPUTS */
+.input-label{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--gray);text-transform:uppercase;margin-bottom:8px;display:block}
+.input-field,.textarea-field,.select-field{width:100%;padding:12px 14px;background:var(--dark3);border:1px solid var(--border);border-radius:6px;font-size:14px;color:var(--white);font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s;-webkit-appearance:none}
+.textarea-field{resize:none;line-height:1.6;min-height:80px}
+.input-field:focus,.textarea-field:focus,.select-field:focus{border-color:var(--green)}
+.input-field::placeholder,.textarea-field::placeholder{color:var(--gray)}
+.select-field option{background:var(--dark3)}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.input-group{margin-bottom:12px}
+
+/* BUTTONS */
+.btn{width:100%;padding:14px;border:none;border-radius:6px;font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s}
+.btn-green{background:linear-gradient(135deg,var(--green),var(--green2));color:#000}
+.btn-green:hover{box-shadow:0 0 20px rgba(0,255,135,0.3);transform:translateY(-1px)}
+.btn-orange{background:linear-gradient(135deg,var(--orange),var(--orange2));color:#fff}
+.btn-orange:hover{box-shadow:0 0 20px rgba(255,107,0,0.3);transform:translateY(-1px)}
+.btn-purple{background:linear-gradient(135deg,var(--purple),#c084ff);color:#fff}
+.btn-purple:hover{box-shadow:0 0 20px rgba(155,89,255,0.3);transform:translateY(-1px)}
+.btn:disabled{background:var(--border);color:var(--gray);cursor:not-allowed;transform:none;box-shadow:none}
+
+/* RESULTS */
+.result-box{background:var(--dark3);border-radius:6px;padding:14px;margin-top:12px;font-size:13px;line-height:1.7;color:var(--white);border-left:3px solid var(--green);white-space:pre-wrap;word-break:break-word}
+.result-box.orange{border-left-color:var(--orange)}
+.result-box.purple{border-left-color:var(--purple)}
+.result-label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--green);text-transform:uppercase;margin-bottom:8px}
+.result-label.orange{color:var(--orange)}
+.result-label.purple{color:var(--purple)}
+
+/* LOADING */
+.loading-bar{width:100%;height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin:12px 0}
+.loading-fill{height:100%;border-radius:2px;animation:load 1.4s ease-in-out infinite;width:35%}
+.loading-fill.green{background:linear-gradient(90deg,var(--green),var(--green2))}
+.loading-fill.orange{background:linear-gradient(90deg,var(--orange),var(--orange2))}
+.loading-fill.purple{background:linear-gradient(90deg,var(--purple),#c084ff)}
+@keyframes load{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+.loading-text{font-size:12px;color:var(--gray);text-align:center;letter-spacing:1px}
+
+/* DAILY BRIEF */
+.brief-header{background:linear-gradient(135deg,var(--green-pale),var(--purple-pale));border:1px solid rgba(0,255,135,0.15);border-radius:8px;padding:16px;margin-bottom:14px;text-align:center}
+.brief-date{font-size:11px;color:var(--gray);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.brief-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--green)}
+
+/* HISTORY */
+.history-item{background:var(--dark2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s}
+.history-item:hover{border-color:var(--green)}
+.history-type{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
+.history-query{font-size:13px;color:var(--white);font-weight:600}
+.history-time{font-size:11px;color:var(--gray);margin-top:2px}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.chip{padding:6px 12px;background:var(--dark3);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--gray);cursor:pointer;transition:all 0.15s;user-select:none}
+.chip:hover,.chip.active{background:var(--green-pale);border-color:rgba(0,255,135,0.4);color:var(--green)}
+.chip.orange:hover,.chip.orange.active{background:var(--orange-pale);border-color:rgba(255,107,0,0.4);color:var(--orange)}
+
+/* DIVIDER */
+.section-divider{height:1px;background:var(--border);margin:16px 0}
+.section-title{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--gray);text-transform:uppercase;margin-bottom:10px}
+
+/* SETTINGS */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:14px;font-weight:600}
+.setting-sub{font-size:12px;color:var(--gray);margin-top:2px}
+.setting-value{font-size:13px;color:var(--green);font-weight:700}
+
+/* SCROLL STYLE */
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-track{background:transparent}
+.content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+.hidden{display:none}
+.mt8{margin-top:8px}
+.mt12{margin-top:12px}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div>
+    <div class="topbar-logo">GAP<span>FINDER</span></div>
+    <div class="topbar-sub">Your Personal Money AI</div>
+  </div>
+  <div class="topbar-right">
+    <div class="budget-badge" onclick="showPage('settings')">💰 Budget: <span id="budget-display">$200</span></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-tab active" onclick="showPage('brief')" id="tab-brief">
+    <span class="tab-icon">⚡</span>Daily Brief
+  </button>
+  <button class="nav-tab" onclick="showPage('ideas')" id="tab-ideas">
+    <span class="tab-icon">💡</span>App Ideas
+  </button>
+  <button class="nav-tab" onclick="showPage('flip')" id="tab-flip">
+    <span class="tab-icon">🔄</span>Flip Finder
+  </button>
+  <button class="nav-tab" onclick="showPage('settings')" id="tab-settings">
+    <span class="tab-icon">⚙️</span>Profile
+  </button>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- DAILY BRIEF PAGE -->
+  <div class="page active" id="page-brief">
+    <div class="brief-header">
+      <div class="brief-date" id="brief-date"></div>
+      <div class="brief-title">YOUR DAILY MONEY BRIEF</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">⚡</div>
+        <div>
+          <div class="card-title">Morning Brief</div>
+          <div class="card-sub">Personalized to your skills, budget & location</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--gray);margin-bottom:12px">Hit the button every morning for your personalized money opportunities for the day.</p>
+        <button class="btn btn-green" onclick="generateBrief()" id="brief-btn">⚡ GENERATE TODAY'S BRIEF</button>
+        <div id="brief-loading" class="hidden">
+          <div class="loading-bar"><div class="loading-fill green"></div></div>
+          <div class="loading-text">Scanning for your best opportunities today...</div>
+        </div>
+        <div id="brief-result" class="hidden">
+          <div class="result-label">TODAY'S OPPORTUNITIES</div>
+          <div class="result-box" id="brief-text"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <div>
+          <div class="card-title">Quick Stats</div>
+          <div class="card-sub">Your money activity</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:var(--dark3);border-radius:6px;padding:14px;text-align:center">
+            <div style="font-size:22px;font-weight:800;color:var(--green)" id="stat-ideas">0</div>
+            <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Ideas Generated</div>
+          </div>
+          <div style="background:var(--dark3);border-radius:6px;padding:14px;text-align:center">
+            <div style="font-size:22px;font-weight:800;color:var(--orange)" id="stat-flips">0</div>
+            <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Flips Analyzed</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IDEAS PAGE -->
+  <div class="page" id="page-ideas">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">💡</div>
+        <div>
+          <div class="card-title">App / Tool Idea Generator</div>
+          <div class="card-sub">Find the next GarageGuard or PawGuard</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="input-group">
+          <label class="input-label">Pick a niche or type your own</label>
+          <div class="chips" id="niche-chips">
+            <div class="chip" onclick="selectChip(this,'niche')">🚗 Cars</div>
+            <div class="chip" onclick="selectChip(this,'niche')">🐶 Pets</div>
+            <div class="chip" onclick="selectChip(this,'niche')">👟 Sneakers</div>
+            <div class="chip" onclick="selectChip(this,'niche')">🏠 Real Estate</div>
+            <div class="chip" onclick="selectChip(this,'niche')">💈 Barbershops</div>
+            <div class="chip" onclick="selectChip(this,'niche')">🍕 Food</div>
+            <div class="chip" onclick="selectChip(this,'niche')">💊 Health</div>
+            <div class="chip" onclick="selectChip(this,'niche')">🔧 Home Repair</div>
+            <div class="chip" onclick="selectChip(this,'niche')">⚖️ Legal</div>
+            <div class="chip" onclick="selectChip(this,'niche')">💇 Beauty</div>
+          </div>
+          <input class="input-field" id="niche-input" placeholder="Or type any niche..." oninput="document.querySelectorAll('#niche-chips .chip').forEach(c=>c.classList.remove('active'))"/>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">What's the problem you want to solve?</label>
+          <textarea class="textarea-field" id="problem-input" placeholder="e.g. People don't know if they're getting ripped off... (optional)"></textarea>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Monetization style</label>
+          <div class="chips">
+            <div class="chip" onclick="selectChip(this,'mono')" id="mono-free">Free tool + email list</div>
+            <div class="chip" onclick="selectChip(this,'mono')" id="mono-sub">Subscription</div>
+            <div class="chip" onclick="selectChip(this,'mono')" id="mono-lead">Lead gen</div>
+            <div class="chip" onclick="selectChip(this,'mono')" id="mono-any">Show me all</div>
+          </div>
+        </div>
+
+        <button class="btn btn-green" onclick="generateIdeas()" id="ideas-btn">💡 FIND MY NEXT BIG IDEA</button>
+
+        <div id="ideas-loading" class="hidden">
+          <div class="loading-bar"><div class="loading-fill green"></div></div>
+          <div class="loading-text">Scanning for market gaps...</div>
+        </div>
+        <div id="ideas-result" class="hidden">
+          <div class="result-label">YOUR MONEY GAPS</div>
+          <div class="result-box" id="ideas-text"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="history-card-ideas" style="display:none">
+      <div class="card-header">
+        <div class="card-icon">🕐</div>
+        <div><div class="card-title">Recent Searches</div></div>
+      </div>
+      <div class="card-body" id="ideas-history"></div>
+    </div>
+  </div>
+
+  <!-- FLIP FINDER PAGE -->
+  <div class="page" id="page-flip">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🔄</div>
+        <div>
+          <div class="card-title">Flip Opportunity Finder</div>
+          <div class="card-sub">Buy low, sell high — find the spread</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="input-group">
+          <label class="input-label">Category</label>
+          <div class="chips">
+            <div class="chip orange" onclick="selectChip(this,'flip-cat')">👟 Sneakers</div>
+            <div class="chip orange" onclick="selectChip(this,'flip-cat')">🚗 Cars</div>
+            <div class="chip orange" onclick="selectChip(this,'flip-cat')">📱 Electronics</div>
+            <div class="chip orange" onclick="selectChip(this,'flip-cat')">👗 Clothes</div>
+            <div class="chip orange" onclick="selectChip(this,'flip-cat')">🛋 Furniture</div>
+            <div class="chip orange" onclick="selectChip(this,'flip-cat')">🎮 Games</div>
+            <div class="chip orange" onclick="selectChip(this,'flip-cat')">⌚ Watches</div>
+          </div>
+          <input class="input-field mt8" id="flip-cat-input" placeholder="Or type specific item (e.g. Jordan 4 Thunder size 11)..."/>
+        </div>
+
+        <div class="input-row">
+          <div>
+            <label class="input-label">My Budget</label>
+            <input class="input-field" id="flip-budget" type="number" placeholder="$200"/>
+          </div>
+          <div>
+            <label class="input-label">Buy Platform</label>
+            <select class="select-field" id="flip-buy-platform">
+              <option value="Facebook Marketplace">FB Marketplace</option>
+              <option value="Craigslist">Craigslist</option>
+              <option value="OfferUp">OfferUp</option>
+              <option value="Copart">Copart</option>
+              <option value="Goodwill">Goodwill</option>
+              <option value="any platform">Any</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-row">
+          <div>
+            <label class="input-label">Sell Platform</label>
+            <select class="select-field" id="flip-sell-platform">
+              <option value="StockX">StockX</option>
+              <option value="eBay">eBay</option>
+              <option value="Facebook Marketplace">FB Marketplace</option>
+              <option value="GOAT">GOAT</option>
+              <option value="Craigslist">Craigslist</option>
+              <option value="the best platform">Best Option</option>
+            </select>
+          </div>
+          <div>
+            <label class="input-label">Min Profit Target</label>
+            <input class="input-field" id="flip-min-profit" type="number" placeholder="$50"/>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Location (for local flips)</label>
+          <input class="input-field" id="flip-location" placeholder="Taunton, MA" value="Taunton, MA"/>
+        </div>
+
+        <button class="btn btn-orange" onclick="findFlips()" id="flip-btn">🔄 FIND MY FLIP OPPORTUNITIES</button>
+
+        <div id="flip-loading" class="hidden">
+          <div class="loading-bar"><div class="loading-fill orange"></div></div>
+          <div class="loading-text">Calculating flip opportunities & profit margins...</div>
+        </div>
+        <div id="flip-result" class="hidden">
+          <div class="result-label orange">FLIP OPPORTUNITIES</div>
+          <div class="result-box orange" id="flip-text"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📋</div>
+        <div><div class="card-title">Quick Reference</div><div class="card-sub">Platform fees to factor in</div></div>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--gray)">StockX fee</span><span style="color:var(--orange);font-weight:700">~9.5%</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--gray)">eBay fee</span><span style="color:var(--orange);font-weight:700">~13%</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--gray)">GOAT fee</span><span style="color:var(--orange);font-weight:700">~15%</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--gray)">FB Marketplace</span><span style="color:var(--green);font-weight:700">0% local</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0"><span style="color:var(--gray)">Your min profit</span><span style="color:var(--white);font-weight:700">$40–50</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS / PROFILE PAGE -->
+  <div class="page" id="page-settings">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">👤</div>
+        <div><div class="card-title">Your Profile</div><div class="card-sub">Personalizes every AI response</div></div>
+      </div>
+      <div class="card-body">
+        <div class="input-group">
+          <label class="input-label">Your Location</label>
+          <input class="input-field" id="s-location" value="Taunton, MA" placeholder="City, State"/>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Available Budget</label>
+          <input class="input-field" id="s-budget" type="number" value="200" placeholder="200"/>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Your Skills (pick all that apply)</label>
+          <div class="chips" id="skill-chips">
+            <div class="chip active" onclick="toggleChip(this)">💻 Web Apps</div>
+            <div class="chip active" onclick="toggleChip(this)">👟 Sneaker Resale</div>
+            <div class="chip active" onclick="toggleChip(this)">🚗 Car Knowledge</div>
+            <div class="chip" onclick="toggleChip(this)">📱 Social Media</div>
+            <div class="chip" onclick="toggleChip(this)">🔧 Mechanic/Handyman</div>
+            <div class="chip" onclick="toggleChip(this)">📦 Shipping/Logistics</div>
+            <div class="chip active" onclick="toggleChip(this)">🛒 FB Marketplace</div>
+            <div class="chip" onclick="toggleChip(this)">📸 Photography</div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Active Projects</label>
+          <textarea class="textarea-field" id="s-projects" placeholder="e.g. GarageGuard, PawGuard, sneaker flipping...">GarageGuard (AI mechanic quote checker), PawGuard (AI dog breeder scam checker), sneaker flipping on StockX/eBay, Facebook Marketplace flipping</textarea>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Monthly Income Goal</label>
+          <input class="input-field" id="s-goal" type="number" placeholder="3000" value="3000"/>
+        </div>
+        <button class="btn btn-green" onclick="saveProfile()">✓ SAVE PROFILE</button>
+        <div id="save-confirm" class="hidden" style="text-align:center;margin-top:10px;font-size:13px;color:var(--green);font-weight:700">✓ Profile saved — all AI responses are now personalized</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🎯</div>
+        <div><div class="card-title">Current Focus</div><div class="card-sub">What GapFinder prioritizes for you</div></div>
+      </div>
+      <div class="card-body">
+        <div class="setting-row">
+          <div><div class="setting-label">Location</div></div>
+          <div class="setting-value" id="display-location">Taunton, MA</div>
+        </div>
+        <div class="setting-row">
+          <div><div class="setting-label">Budget</div></div>
+          <div class="setting-value" id="display-budget">$200</div>
+        </div>
+        <div class="setting-row">
+          <div><div class="setting-label">Income Goal</div></div>
+          <div class="setting-value" id="display-goal">$3,000/mo</div>
+        </div>
+        <div class="setting-row">
+          <div><div class="setting-label">Min Flip Profit</div><div class="setting-sub">Based on your rules</div></div>
+          <div class="setting-value">$40–50</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// STATE
+let profile = {
+  location: 'Taunton, MA',
+  budget: 200,
+  skills: ['Web Apps','Sneaker Resale','Car Knowledge','FB Marketplace'],
+  projects: 'GarageGuard (AI mechanic quote checker), PawGuard (AI dog breeder scam checker), sneaker flipping on StockX/eBay, Facebook Marketplace flipping',
+  goal: 3000
+};
+let stats = { ideas: 0, flips: 0 };
+let ideasHistory = [];
+
+// INIT
+document.getElementById('brief-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+document.getElementById('flip-budget').value = profile.budget;
+
+// NAV
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('tab-' + page).classList.add('active');
+}
+
+// CHIP SELECTION
+function selectChip(el, group) {
+  document.querySelectorAll(`[onclick*="selectChip(this,'${group}')"]`).forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  if (group === 'niche') document.getElementById('niche-input').value = '';
+}
+function toggleChip(el) { el.classList.toggle('active'); }
+
+function getActiveChips(group) {
+  const chips = document.querySelectorAll(`[onclick*="selectChip(this,'${group}')"].active`);
+  return chips.length ? chips[0].textContent.trim() : '';
+}
+function getActiveSkills() {
+  return Array.from(document.querySelectorAll('#skill-chips .chip.active')).map(c => c.textContent.trim()).join(', ');
+}
+
+// PROFILE
+function saveProfile() {
+  profile.location = document.getElementById('s-location').value || 'Taunton, MA';
+  profile.budget = parseInt(document.getElementById('s-budget').value) || 200;
+  profile.skills = getActiveSkills();
+  profile.projects = document.getElementById('s-projects').value;
+  profile.goal = parseInt(document.getElementById('s-goal').value) || 3000;
+  document.getElementById('budget-display').textContent = '$' + profile.budget;
+  document.getElementById('display-location').textContent = profile.location;
+  document.getElementById('display-budget').textContent = '$' + profile.budget;
+  document.getElementById('display-goal').textContent = '$' + profile.goal.toLocaleString() + '/mo';
+  const c = document.getElementById('save-confirm');
+  c.classList.remove('hidden');
+  setTimeout(() => c.classList.add('hidden'), 3000);
+}
+
+// API CALL
+async function callAI(prompt, system) {
+  const res = await fetch('https://corsproxy.io/?url=https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      system: system,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await res.json();
+  return (data.content || []).map(b => b.text || '').join('');
+}
+
+// DAILY BRIEF
+async function generateBrief() {
+  const btn = document.getElementById('brief-btn');
+  btn.disabled = true; btn.textContent = '⟳ GENERATING...';
+  document.getElementById('brief-loading').classList.remove('hidden');
+  document.getElementById('brief-result').classList.add('hidden');
+
+  const system = `You are GapFinder, a personal money advisor AI. Be direct, specific, and actionable. No fluff. Format with clear sections using emojis. Keep it under 400 words.`;
+  const prompt = `Generate a personalized daily money brief for today (${new Date().toDateString()}).
+
+My profile:
+- Location: ${profile.location}
+- Budget: $${profile.budget}
+- Skills: ${profile.skills}
+- Active projects: ${profile.projects}
+- Monthly income goal: $${profile.goal}
+- Min flip profit threshold: $40-50
+
+Give me:
+1. TOP OPPORTUNITY TODAY — the single best money move I should focus on today
+2. QUICK FLIP ALERT — one specific item to look for on Facebook Marketplace right now in my area and what it sells for
+3. PROJECT MOVE — one specific action I should take on one of my active projects today
+4. MONEY TIP — one insight about making money that applies directly to my situation
+
+Be hyper-specific to my location, budget, and current projects. Don't be generic.`;
+
+  try {
+    const result = await callAI(prompt, system);
+    document.getElementById('brief-text').textContent = result;
+    document.getElementById('brief-result').classList.remove('hidden');
+  } catch(e) {
+    document.getElementById('brief-text').textContent = '⚠ Connection error. Check your internet and try again.';
+    document.getElementById('brief-result').classList.remove('hidden');
+  } finally {
+    document.getElementById('brief-loading').classList.add('hidden');
+    btn.disabled = false; btn.textContent = '⚡ GENERATE TODAY\'S BRIEF';
+  }
+}
+
+// IDEA GENERATOR
+async function generateIdeas() {
+  const niche = document.getElementById('niche-input').value || getActiveChips('niche');
+  if (!niche) { alert('Pick a niche first'); return; }
+  const problem = document.getElementById('problem-input').value;
+  const mono = getActiveChips('mono');
+
+  const btn = document.getElementById('ideas-btn');
+  btn.disabled = true; btn.textContent = '⟳ SCANNING...';
+  document.getElementById('ideas-loading').classList.remove('hidden');
+  document.getElementById('ideas-result').classList.add('hidden');
+
+  const system = `You are GapFinder, an expert at finding market gaps and building profitable tools and apps. Be specific, direct, and realistic. Format with clear numbered ideas using emojis.`;
+  const prompt = `Find market gap opportunities in the "${niche}" niche for me to build simple AI-powered tools or apps.
+
+My background:
+- I already built GarageGuard (mechanic quote checker) and PawGuard (dog breeder scam checker) — both free AI tools with email capture
+- Location: ${profile.location}
+- Budget to build: $${profile.budget} (I build on CodePen, so basically $0)
+- Skills: ${profile.skills}
+- Monetization preference: ${mono || 'free tool + email list first, monetize later'}
+${problem ? `- Problem I want to solve: ${problem}` : ''}
+
+Give me 4 specific app/tool ideas in the "${niche}" niche. For each idea include:
+🎯 NAME — catchy name for the tool
+💡 THE GAP — what problem nobody is solving well
+🔧 HOW IT WORKS — simple 1-2 sentence explanation
+💰 MONEY MODEL — how it makes money
+📊 VIABILITY SCORE — X/10 with reasoning
+⚡ FIRST STEP — exact first action to take today
+
+Make each idea similar in spirit to GarageGuard — a free AI tool that solves a real fear people have before making a purchase or decision.`;
+
+  try {
+    const result = await callAI(prompt, system);
+    document.getElementById('ideas-text').textContent = result;
+    document.getElementById('ideas-result').classList.remove('hidden');
+    stats.ideas++;
+    document.getElementById('stat-ideas').textContent = stats.ideas;
+    // Save to history
+    ideasHistory.unshift({ niche, time: new Date().toLocaleTimeString(), result });
+    if (ideasHistory.length > 5) ideasHistory.pop();
+    renderIdeasHistory();
+  } catch(e) {
+    document.getElementById('ideas-text').textContent = '⚠ Connection error. Try again.';
+    document.getElementById('ideas-result').classList.remove('hidden');
+  } finally {
+    document.getElementById('ideas-loading').classList.add('hidden');
+    btn.disabled = false; btn.textContent = '💡 FIND MY NEXT BIG IDEA';
+  }
+}
+
+function renderIdeasHistory() {
+  const container = document.getElementById('ideas-history');
+  const card = document.getElementById('history-card-ideas');
+  if (!ideasHistory.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  container.innerHTML = ideasHistory.map((h, i) => `
+    <div class="history-item" onclick="showHistory(${i})">
+      <div class="history-type" style="color:var(--green)">💡 APP IDEAS</div>
+      <div class="history-query">${h.niche}</div>
+      <div class="history-time">${h.time}</div>
+    </div>`).join('');
+}
+function showHistory(i) {
+  document.getElementById('ideas-text').textContent = ideasHistory[i].result;
+  document.getElementById('ideas-result').classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+
+// FLIP FINDER
+async function findFlips() {
+  const cat = document.getElementById('flip-cat-input').value || getActiveChips('flip-cat');
+  if (!cat) { alert('Pick a category or type an item first'); return; }
+  const budget = document.getElementById('flip-budget').value || profile.budget;
+  const buyPlatform = document.getElementById('flip-buy-platform').value;
+  const sellPlatform = document.getElementById('flip-sell-platform').value;
+  const minProfit = document.getElementById('flip-min-profit').value || 50;
+  const location = document.getElementById('flip-location').value || profile.location;
+
+  const btn = document.getElementById('flip-btn');
+  btn.disabled = true; btn.textContent = '⟳ FINDING FLIPS...';
+  document.getElementById('flip-loading').classList.remove('hidden');
+  document.getElementById('flip-result').classList.add('hidden');
+
+  const system = `You are GapFinder, an expert reseller and arbitrage advisor. Be hyper-specific with real item names, model numbers, sizes, and realistic price ranges. No vague advice.`;
+  const prompt = `Find flip opportunities for me right now.
+
+My details:
+- Category/Item: ${cat}
+- Budget: $${budget}
+- Location: ${location}
+- Buy on: ${buyPlatform}
+- Sell on: ${sellPlatform}
+- Minimum profit target: $${minProfit} after all fees
+- I know sneakers well — Air Jordans, Nike, Adidas, etc.
+- I have experience with Facebook Marketplace local flips
+
+Give me 3-5 SPECIFIC flip opportunities:
+
+For each one include:
+📦 ITEM — exact name, model, size range to look for
+💸 BUY PRICE — what to pay max on ${buyPlatform} in ${location}
+💰 SELL PRICE — realistic last-sold price on ${sellPlatform}
+📊 NET PROFIT — after platform fees (be accurate on fees)
+⚡ HOW TO FIND IT — specific search terms to use on ${buyPlatform}
+⚠️ WATCH OUT FOR — common fakes or issues with this item
+
+Only recommend items where I can realistically profit $${minProfit}+. Be honest — if the margins are tight, say so.`;
+
+  try {
+    const result = await callAI(prompt, system);
+    document.getElementById('flip-text').textContent = result;
+    document.getElementById('flip-result').classList.remove('hidden');
+    stats.flips++;
+    document.getElementById('stat-flips').textContent = stats.flips;
+  } catch(e) {
+    document.getElementById('flip-text').textContent = '⚠ Connection error. Try again.';
+    document.getElementById('flip-result').classList.remove('hidden');
+  } finally {
+    document.getElementById('flip-loading').classList.add('hidden');
+    btn.disabled = false; btn.textContent = '🔄 FIND MY FLIP OPPORTUNITIES';
+  }
+}
+</script>
+</body>
+</html>
